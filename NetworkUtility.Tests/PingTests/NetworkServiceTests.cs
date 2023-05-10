@@ -1,4 +1,6 @@
 ﻿using FluentAssertions;
+using Moq;
+using NetworkUtility.DNS;
 using NetworkUtility.Models;
 using NetworkUtility.Ping;
 using Newtonsoft.Json.Bson;
@@ -12,14 +14,25 @@ namespace NetworkUtility.Tests.PingTests
 {
     public class NetworkServiceTests
     {
+        private readonly NetworkService _networkService;
+        private readonly IDNSService _dnsService;
+        private readonly Mock<IDNSService> mock;
+        public NetworkServiceTests()
+        {
+            //Depedancies 
+             mock = new Mock<IDNSService>();
+            _dnsService = mock.Object;
+            //SUT
+            _networkService = new NetworkService(_dnsService);
+        }
+
         [Fact]
         public void NetworkService_SendPing_ReturnsStringSuccess()
         {
             //Arrange 
-            NetworkService service = new NetworkService();
-
+            mock.Setup(p => p.SendDNS()).Returns(true);
             //Act 
-            var actual = service.SendPing();
+            var actual = _networkService.SendPing();
 
             //Assert
             var expected = "Success: Ping Sent!";
@@ -36,10 +49,10 @@ namespace NetworkUtility.Tests.PingTests
         public void NetworkService_AddPings_ReturnsAddingOfTwoNumbersTheory(int a, int b, int expected)
         {
             //Arrange 
-            NetworkService service = new NetworkService();
+            
 
             //Act 
-            var actual = service.AddPings(a,b);
+            var actual = _networkService.AddPings(a,b);
 
             //Assert
             
@@ -51,10 +64,10 @@ namespace NetworkUtility.Tests.PingTests
         public void NetworkService_LastPingDate_ReturnsDateTime()
         {
             //Arrange 
-            NetworkService service = new NetworkService();
+           
 
             //Act 
-            var actual = service.LastPingDate().ToString("dd,MM,yyyy");
+            var actual = _networkService.LastPingDate().ToString("dd,MM,yyyy");
 
             //Assert
             var expected = DateTime.Now.ToString("dd,MM,yyyy");
@@ -73,12 +86,12 @@ namespace NetworkUtility.Tests.PingTests
                 Size = 1232,
                 Type = ""
             }; 
-            NetworkService service = new NetworkService();
+            
 
             //Act
             
             //Assert
-            Assert.Throws<ArgumentNullException>( () => service.GetPingOption(pingOption));
+            Assert.Throws<ArgumentNullException>( () => _networkService.GetPingOption(pingOption));
         }
 
         [Fact]
@@ -91,10 +104,10 @@ namespace NetworkUtility.Tests.PingTests
                 Size = 1232,
                 Type = "Ping"
             };
-            NetworkService service = new NetworkService();
+            
 
             //Act
-            var actual = service.GetPingOption(pingOption);
+            var actual = _networkService.GetPingOption(pingOption);
             //Assert
             var expected = pingOption;
             Assert.Equal(expected, actual); 
@@ -110,10 +123,10 @@ namespace NetworkUtility.Tests.PingTests
                 Size = 1232,
                 Type = "Ping"
             };
-            NetworkService service = new NetworkService();
+            
 
             //Act
-            var actual = service.LastRecentPingOption();
+            var actual = _networkService.LastRecentPingOption();
             //Assert
             var expected = pingOption;
             Assert.True(actual.Any(o => o.Date == pingOption.Date));
